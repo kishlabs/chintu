@@ -42,8 +42,9 @@ class ChintuApp:
         self.gemini = GeminiAPI(CONFIG.ai)
         self.router = AIRouter(self.local, self.gemini)
 
-        self.camera = Camera()
+        self.camera = Camera(CONFIG.camera)
         self.scanner = SceneScanner(self.camera, self.gemini, self.speaker, self.state)
+        logger.info(self.camera.status_message())
 
         self.patrol = PatrolRoutine(self.motor, self.state)
         self.wake = WakeWordDetector(self.on_wake_word, CONFIG.voice)
@@ -80,11 +81,13 @@ class ChintuApp:
 
             self.state.set_emotion(Emotion.THINKING)
             route = self.router.route(text)
+            logger.debug("Route result: kind=%s action=%s", route.kind, route.action)
             self.handle_route(route)
 
         self.shutdown()
 
     def handle_route(self, route):
+        logger.debug("Handling route: %s", route)
         if route.kind == "DIRECT":
             action = route.action
             if action == "forward":

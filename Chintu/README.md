@@ -39,6 +39,7 @@ Chintu/
    export PORCUPINE_KEYWORD_PATH="/home/pi/hey-chintu.ppn"  # optional custom wake phrase
    export WAKE_WORD="porcupine"  # built-in Porcupine keyword when custom keyword path is not set
    export VOSK_MODEL_PATH="/home/pi/models/vosk-model-small-en-us-0.15"
+   export CHINTU_LOG_LEVEL="DEBUG"  # optional: DEBUG, INFO, WARNING
    ```
 5. Run:
    ```bash
@@ -73,3 +74,4 @@ Chintu/
 
 - Eye animations are fully procedural (no static PNG assets).
 - All hardware modules include fallback behavior for non-Pi development.
+- If the camera is disconnected, Chintu logs and speaks a clear "Camera not connected" message while other modules continue running.
