@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import json
 import queue
+from queue import Empty
 
+from core.config import VoiceConfig
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -20,17 +22,15 @@ except Exception:
 
 
 class Listener:
-    """Speech-to-text adapter.
+    """Speech-to-text adapter. Uses VOSK when available, else console fallback."""
 
-    Uses VOSK when available, with console input fallback.
-    """
-
-    def __init__(self, model_path: str = "model") -> None:
+    def __init__(self, config: VoiceConfig) -> None:
         self.model = None
+        self.config = config
         if Model and sd:
             try:
-                self.model = Model(model_path)
-                logger.info("VOSK model loaded")
+                self.model = Model(config.vosk_model_path)
+                logger.info("VOSK model loaded from %s", config.vosk_model_path)
             except Exception as exc:
                 logger.warning("VOSK model not loaded (%s), using text fallback", exc)
 
@@ -55,8 +55,11 @@ class Listener:
 
         logger.info("Listening for speech...")
         with sd.RawInputStream(samplerate=16000, blocksize=8000, dtype="int16", channels=1, callback=callback):
-            for _ in range(120):  # ~60 seconds max
-                chunk = audio_q.get()
+            for _ in range(120):
+                try:
+                    chunk = audio_q.get(timeout=0.5)
+                except Empty:
+                    continue
                 if rec.AcceptWaveform(chunk):
                     result = json.loads(rec.Result())
                     text = (result.get("text") or "").strip()

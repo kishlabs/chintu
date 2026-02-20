@@ -6,6 +6,7 @@ import struct
 import threading
 from time import sleep
 
+from core.config import VoiceConfig
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -22,11 +23,11 @@ except Exception:
 
 
 class WakeWordDetector:
-    """Wake word detector with Porcupine + microphone, plus fallback mode."""
+    """Wake word detector with Porcupine + microphone and safe fallback."""
 
-    def __init__(self, callback, keyword: str = "porcupine"):
+    def __init__(self, callback, config: VoiceConfig):
         self.callback = callback
-        self.keyword = keyword
+        self.config = config
         self._running = False
         self._thread: threading.Thread | None = None
 
@@ -40,6 +41,21 @@ class WakeWordDetector:
         if self._thread:
             self._thread.join(timeout=1)
 
+    def _create_porcupine(self):
+        if not pvporcupine:
+            return None
+
+        kwargs = {}
+        if self.config.porcupine_access_key:
+            kwargs["access_key"] = self.config.porcupine_access_key
+
+        if self.config.porcupine_keyword_path:
+            kwargs["keyword_paths"] = [self.config.porcupine_keyword_path]
+        else:
+            kwargs["keywords"] = [self.config.wake_word]
+
+        return pvporcupine.create(**kwargs)
+
     def _run(self):
         if not pvporcupine or not sd:
             logger.warning("Wake word stack unavailable; using simulation mode")
@@ -51,7 +67,9 @@ class WakeWordDetector:
         porcupine = None
         stream = None
         try:
-            porcupine = pvporcupine.create(keywords=[self.keyword])
+            porcupine = self._create_porcupine()
+            if porcupine is None:
+                raise RuntimeError("Porcupine initialization unavailable")
 
             def audio_callback(indata, frames, time_info, status):
                 if status:
@@ -69,7 +87,7 @@ class WakeWordDetector:
                 callback=audio_callback,
             )
             stream.start()
-            logger.info("Wake word detector active")
+            logger.info("Wake word detector active (%s)", self.config.wake_word)
 
             while self._running:
                 try:

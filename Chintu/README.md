@@ -35,6 +35,10 @@ Chintu/
    ```bash
    export GEMINI_API_KEY="your_key_here"
    export OLLAMA_MODEL="phi3:mini"
+   export PORCUPINE_ACCESS_KEY="your_porcupine_access_key"
+   export PORCUPINE_KEYWORD_PATH="/home/pi/hey-chintu.ppn"  # optional custom wake phrase
+   export WAKE_WORD="porcupine"  # built-in Porcupine keyword when custom keyword path is not set
+   export VOSK_MODEL_PATH="/home/pi/models/vosk-model-small-en-us-0.15"
    ```
 5. Run:
    ```bash
@@ -55,7 +59,7 @@ Chintu/
 
 ## Example Usage Flow
 
-1. Wake word thread triggers interaction.
+1. Wake word detector triggers interaction (`WAKE_WORD`/Porcupine keyword).
 2. Emotion changes to `LISTENING` and speech is captured.
 3. Router classifies text:
    - direct commands -> motor/scanner actions,

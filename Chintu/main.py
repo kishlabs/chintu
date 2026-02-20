@@ -37,7 +37,7 @@ class ChintuApp:
         )
         self.motor = MotorDriver(CONFIG.motor)
         self.speaker = Speaker()
-        self.listener = Listener()
+        self.listener = Listener(CONFIG.voice)
         self.local = LocalLlama(CONFIG.ai)
         self.gemini = GeminiAPI(CONFIG.ai)
         self.router = AIRouter(self.local, self.gemini)
@@ -46,7 +46,7 @@ class ChintuApp:
         self.scanner = SceneScanner(self.camera, self.gemini, self.speaker, self.state)
 
         self.patrol = PatrolRoutine(self.motor, self.state)
-        self.wake = WakeWordDetector(self.on_wake_word)
+        self.wake = WakeWordDetector(self.on_wake_word, CONFIG.voice)
         self.running = True
         self._wake_event = threading.Event()
 
